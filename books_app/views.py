@@ -21,10 +21,15 @@ from transliterate import translit
 @api_view(["GET"])
 @csrf_exempt
 @permission_classes([IsAuthenticated])
-def get_books(request):
-    books = Book.objects.all()
-    serializer = BookSerializer(books, many=True)
-    return JsonResponse({'books': serializer.data}, safe=False, status=status.HTTP_200_OK)
+def get_books(request, book_id=None):
+    if book_id is None:
+        books = Book.objects.all()
+        serializer = BookSerializer(books, many=True)
+        return JsonResponse({'books': serializer.data}, safe=False, status=status.HTTP_200_OK)
+    else:
+        book = Book.objects.get(id=book_id)
+        serializer = BookSerializer(book)
+        return JsonResponse({'books': serializer.data}, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -93,10 +98,15 @@ def delete_book(request, book_id):
 @api_view(["GET"])
 @csrf_exempt
 @permission_classes([IsAuthenticated])
-def get_authors(request):
-    books = Author.objects.all()
-    serializer = AuthorSerializer(books, many=True)
-    return JsonResponse({'authors': serializer.data}, safe=False, status=status.HTTP_200_OK)
+def get_authors(request, author_id=None):
+    if author_id is None:
+        authors = Author.objects.all()
+        serializer = AuthorSerializer(authors, many=True)
+        return JsonResponse({'authors': serializer.data}, safe=False, status=status.HTTP_200_OK)
+    else:
+        author = Author.objects.get(id=author_id)
+        serializer = AuthorSerializer(author)
+        return JsonResponse({'authors': serializer.data}, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -162,11 +172,15 @@ def delete_author(request, author_id):
 @api_view(["GET"])
 @csrf_exempt
 @permission_classes([IsAuthenticated])
-def get_genres(request):
-    user = request.user
-    genres = Genre.objects.all()
-    serializer = GenreSerializer(genres, many=True)
-    return JsonResponse({'genres': serializer.data}, safe=False, status=status.HTTP_200_OK)
+def get_genres(request, genre_id=None):
+    if genre_id is None:
+        genres = Genre.objects.all()
+        serializer = GenreSerializer(genres, many=True)
+        return JsonResponse({'genres': serializer.data}, safe=False, status=status.HTTP_200_OK)
+    else:
+        genre = Genre.objects.get(id=genre_id)
+        serializer = GenreSerializer(genre)
+        return JsonResponse({'genres': serializer.data}, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
