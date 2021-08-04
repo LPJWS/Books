@@ -1,3 +1,5 @@
+import operator
+
 from django.conf import settings
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
@@ -24,7 +26,19 @@ from transliterate import translit
 @permission_classes([IsAuthenticated])
 def get_books(request, book_id=None):
     if book_id is None:
+        params = request.query_params
+
         books = Book.objects.all()
+
+        filter_args = {}
+        for p in params.keys():
+            if p != 'sortby':
+                filter_args[p] = params[p]
+        if filter_args:
+            books = books.filter(**filter_args)
+        if 'sortby' in params:
+            books = books.order_by(params['sortby'])
+
         serializer = BookSerializer(books, many=True)
         return JsonResponse({'books': serializer.data}, safe=False, status=status.HTTP_200_OK)
     else:
@@ -104,7 +118,19 @@ def delete_book(request, book_id):
 @permission_classes([IsAuthenticated])
 def get_authors(request, author_id=None):
     if author_id is None:
+        params = request.query_params
+
         authors = Author.objects.all()
+
+        filter_args = {}
+        for p in params.keys():
+            if p != 'sortby':
+                filter_args[p] = params[p]
+        if filter_args:
+            authors = authors.filter(**filter_args)
+        if 'sortby' in params:
+            authors = authors.order_by(params['sortby'])
+
         serializer = AuthorSerializer(authors, many=True)
         return JsonResponse({'authors': serializer.data}, safe=False, status=status.HTTP_200_OK)
     else:
@@ -178,7 +204,19 @@ def delete_author(request, author_id):
 @permission_classes([IsAuthenticated])
 def get_genres(request, genre_id=None):
     if genre_id is None:
+        params = request.query_params
+
         genres = Genre.objects.all()
+
+        filter_args = {}
+        for p in params.keys():
+            if p != 'sortby':
+                filter_args[p] = params[p]
+        if filter_args:
+            genres = genres.filter(**filter_args)
+        if 'sortby' in params:
+            genres = genres.order_by(params['sortby'])
+
         serializer = GenreSerializer(genres, many=True)
         return JsonResponse({'genres': serializer.data}, safe=False, status=status.HTTP_200_OK)
     else:
