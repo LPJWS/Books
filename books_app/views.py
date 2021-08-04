@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -36,23 +37,23 @@ def get_books(request, book_id=None):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def add_book(request):
-    payload = json.loads(request.body)
+    payload = request.data
+
+    file = request.FILES.get('img')
+    filename = translit(payload["title"], reversed=True).replace(' ', '_').lower() + '.' + file.name.split('.')[1]
+    with open(settings.MEDIA_ROOT + '/books/' + filename, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
     try:
         author = Author.objects.get(id=payload["author"])
         genre = Genre.objects.get(id=payload["genre"])
-
-        # Base64 image upload
-        # fmt, imgstr = payload["img"].split(';base64,')
-        # ext = fmt.split('/')[-1]
-        # filename = translit(payload["title"], reversed=True).replace(' ', '_').lower()
-        # img_data = ContentFile(base64.b64decode(imgstr), name='%s.%s' % (filename, ext))
 
         book = Book.objects.create(
             title=payload["title"],
             description=payload["description"],
             author=author,
-            # img=img_data,
-            img=payload["img"],
+            img='/books/' + filename,
             published_date=payload["published_date"],
             genre=genre
         )
@@ -68,10 +69,13 @@ def add_book(request):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def update_book(request, book_id):
-    payload = json.loads(request.body)
+    payload = request.data
+    payload_ = {key: payload[key] for key in payload.keys()}
+    # print(payload_['title'])
+    # return JsonResponse({'error': '111'}, safe=False, status=status.HTTP_404_NOT_FOUND)
     try:
         book_item = Book.objects.filter(id=book_id)
-        book_item.update(**payload)
+        book_item.update(**payload_)
         book = Book.objects.get(id=book_id)
         serializer = BookSerializer(book)
         return JsonResponse({'book': serializer.data}, safe=False, status=status.HTTP_200_OK)
@@ -113,19 +117,18 @@ def get_authors(request, author_id=None):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def add_author(request):
-    payload = json.loads(request.body)
+    payload = request.data
 
-    # Base64 image upload
-    # fmt, imgstr = payload["img"].split(';base64,')
-    # ext = fmt.split('/')[-1]
-    # filename = translit(payload["name"], reversed=True).replace(' ', '_').lower()
-    # img_data = ContentFile(base64.b64decode(imgstr), name='%s.%s' % (filename, ext))
+    file = request.FILES.get('img')
+    filename = translit(payload["title"], reversed=True).replace(' ', '_').lower() + '.' + file.name.split('.')[1]
+    with open(settings.MEDIA_ROOT + '/authors/' + filename, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
 
     try:
         author = Author.objects.create(
             name=payload["name"],
-            # img=img_data,
-            img=payload["img"],
+            img='/authors/' + filename,
             birth_date=payload["birth_date"]
         )
         serializer = AuthorSerializer(author)
@@ -140,10 +143,11 @@ def add_author(request):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def update_author(request, author_id):
-    payload = json.loads(request.body)
+    payload = request.data
+    payload_ = {key: payload[key] for key in payload.keys()}
     try:
         author_item = Author.objects.filter(id=author_id)
-        author_item.update(**payload)
+        author_item.update(**payload_)
         author = Author.objects.get(id=author_id)
         serializer = AuthorSerializer(author)
         return JsonResponse({'author': serializer.data}, safe=False, status=status.HTTP_200_OK)
@@ -187,7 +191,7 @@ def get_genres(request, genre_id=None):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def add_genre(request):
-    payload = json.loads(request.body)
+    payload = request.data
     try:
         genre = Genre.objects.create(
             name=payload["name"],
@@ -205,10 +209,11 @@ def add_genre(request):
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def update_genre(request, genre_id):
-    payload = json.loads(request.body)
+    payload = request.data
+    payload_ = {key: payload[key] for key in payload.keys()}
     try:
         genre_item = Genre.objects.filter(id=genre_id)
-        genre_item.update(**payload)
+        genre_item.update(**payload_)
         genre = Genre.objects.get(id=genre_id)
         serializer = GenreSerializer(genre)
         return JsonResponse({'genre': serializer.data}, safe=False, status=status.HTTP_200_OK)
